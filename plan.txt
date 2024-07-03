@@ -1,0 +1,92 @@
+"""
+# Core solver object for the module.
+"""
+# should have methods to: set model, set score, set data, train model, call history, reset history, predict with current model
+# should have attributes as: model, (train/test/val) data, training history, 
+class CNN_Solver():
+    attribute model  # should be another class
+    attribute x_data_all, y_data_all, x_data_train, y_data_train, x_data_test, y_data_test, x_data_val, y_data_val
+    attribute history # what history do we need? loss? time?
+    method write_data(x_data_all, y_data_all, do_split=True)  # (1) save the overall data to x_data_all, y_data_all; (2) split data to train/test/val
+    method split_data(r_train=0.7, r_test=0.2)  # r_val = 1 - r_train - r_test; assert 1.0 > r_val > 0.0; make it outside write_data() so we can re-split when needed
+    method set_model(cnn_model)
+    method train_model(loss_function, n_steps=10000, batch_size=100, learning_rate=0.01, reset_history=False, reset_model=False)  # Should call validate_model_data() at the beginning. Seems too short. Might have forgotten something.
+    method validate_model_data()  # sanity check before train_model(), e.g. dimension
+    method predict(x_data, y_data=None, loss_function=None, do_validate=True)  # predict y_data with current model; (optional) evaluate the prediction; can use it in train_model(); call validate_model_data() if not in training cycle
+    method reset_model_and_history(reset_model=True, reset_history=True)  # reset model parameters; reset history.
+    method call_history()  # print history (loss? time?) in a human-readable way.
+
+"""
+# Model object. Contain layers.
+"""
+# Is it necessary to make it an independent class, or is list enough? Seems necessary: compute_data() is enough reason.
+class CNN_Model():
+    attribute layers = []  # contain layers (object)
+    method compute_data(x_data)  # compute x_data through all layers and return final y_data
+    method backpropagation(diff)  # propagate diff = y_true - y_predicted to update parameters
+    method call_n_layers()  # return len(layers)
+    method insert_layer(layer, idx=-1)  # add to the end of self.layers by default
+    method get_layer_info(idx)
+    method remove_layer(idx)
+    method validate_model()  # (1) check if all layers are connected with right I/O dimensions; (2) check if all layers have action function set up(?)
+    method call_input_dimension()  # return the input dimension of the first layer
+    method call_output_dimension()  # return the output dimension of the last layer
+
+"""
+# Layer stuff. In the long run, we will have different layers. Should first create a template with shared attributes/methods
+"""
+class Layer():
+    attribute input_dim, output_dim
+    attribute name
+    attribute action_funtion
+    method __init__(input_dim, output_dim, name, activation_funtion)
+    method compute_data(x_data)  # details differ for different layers
+    method backpropagation(diff)
+    method reset_parameters()  # details differ for different layers
+    method update_parameters()
+
+# Main type of layer for simple CNN
+class Dense(Layer):
+    # output: y = activation(w * x + b)
+    # backpropagation: review...
+    # limit input_dim and output_dim to 1D
+    attribute w=np.array(2d), b=np.array(1d)
+    method __init__(...)  # initialize self.w and self.b according to I/O dimensions   
+
+# Decompose multi-dimension data
+class SimpleDecompose(Layer):
+    # in this version, output_dim always = Pi(input_dim)
+    # just use numpy.reshape...
+
+"""
+# Activation functions
+"""
+# not sure if it's better to make them as functions or objects. advantage of functions: simple; advantage of objects: unified parameters (but there aren't too many parameters)
+# Let's do functions for now
+
+# linear
+def linear_activation(input):
+    return input
+
+# sigmoid
+def sigmoid_activation(input):
+    return 1 / (1 + np.exp(-input))
+
+# linear action
+def ReLU_activation(input):
+    result = input.copy()
+    result[result <= 0] = 0
+    return result
+
+"""
+# Loss functions
+"""
+# Similar questions with activation functions. Let's do functions for now
+
+# Log Loss (for classification)
+def log_loss(y_true, y_pred):
+    m = len(y_true)
+    assert m == len(y_pred)  # should have been checked elsewhere...
+    assert 0 <= y_true, y_pred <= 1  # should have been checked elsewhere...
+    Loss = -np.sum(y_true * np.log(y_pred)) / m
+    return Loss
