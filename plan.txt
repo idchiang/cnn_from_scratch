@@ -53,6 +53,8 @@ class Layer():
     method reset_parameters()  # details differ for different layers
     method update_parameters()
 
+    "__main__"
+
 # Main type of layer for simple CNN
 class Dense(Layer):
     # output: y = activation(w * x + b)
