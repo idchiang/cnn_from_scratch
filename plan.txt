@@ -28,15 +28,16 @@ class CNN_Solver():
 # Is it necessary to make it an independent class, or is list enough? Seems necessary: compute_data() is enough reason.
 class CNN_Model():
     attribute layers = []  # contain layers (object)
-    method compute_data(x_data)  # compute x_data through all layers and return final y_data
-    method backpropagation(diff)  # propagate diff = y_true - y_predicted to update parameters
-    method call_n_layers()  # return len(layers)
+    method naive_model(ndims, activation_function='sigmoid')  # ndims=[num, num, num....num]. similar to sklearn.
     method insert_layer(layer, idx=-1)  # add to the end of self.layers by default
     method get_layer_info(idx)
     method remove_layer(idx)
     method validate_model()  # (1) check if all layers are connected with right I/O dimensions; (2) check if all layers have action function set up(?)
+    method call_n_layers()  # return len(layers)
     method call_input_dimension()  # return the input dimension of the first layer
     method call_output_dimension()  # return the output dimension of the last layer
+    method compute_data(x_data)  # compute x_data through all layers and return final y_data
+    method backpropagation(diff)  # propagate diff = y_true - y_predicted to update parameters
 
 """
 # Layer stuff. (DenseLayer-focused)
