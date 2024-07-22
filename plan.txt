@@ -1,4 +1,10 @@
 """
+# Not planned yet
+"""
+# Regularization
+# Data Augmentation --> can do it outside the main module
+
+"""
 # Core solver object for the module.
 """
 # should have methods to: set model, set score, set data, train model, call history, reset history, predict with current model
@@ -33,12 +39,13 @@ class CNN_Model():
     method call_output_dimension()  # return the output dimension of the last layer
 
 """
-# Layer stuff. In the long run, we will have different layers. Should first create a template with shared attributes/methods
+# Layer stuff. (DenseLayer-focused)
 """
 class Layer():
     attribute input_dim, output_dim
+    attribute neurons (list)
     attribute name
-    attribute action_funtion
+    # attribute action_funtion  # old structure
     method __init__(input_dim, output_dim, name, activation_funtion)
     method compute_data(x_data)  # details differ for different layers
     method backpropagation(diff)
@@ -50,13 +57,31 @@ class Dense(Layer):
     # output: y = activation(w * x + b)
     # backpropagation: review...
     # limit input_dim and output_dim to 1D
-    attribute w=np.array(2d), b=np.array(1d)
-    method __init__(...)  # initialize self.w and self.b according to I/O dimensions   
+    # attribute w=np.array(2d), b=np.array(1d)  # old structure
+    method __init__(...)  # initialize self.w and self.b according to I/O dimensions
 
 # Decompose multi-dimension data
 class SimpleDecompose(Layer):
     # in this version, output_dim always = Pi(input_dim)
     # just use numpy.reshape...
+
+"""
+# Neuron object. (DenseLayer-focused)
+"""
+# Neuron for Dense Layer.
+# Not sure if we need other types of neurons. Just keep the name clear. 
+class DenseNeuron():
+    attribute input_dim
+    attribute self.w (np.ndarray, input_dim -> 1), self.b (float)
+    attribute self.delta_w, self.delta_b  # save for batch update
+    attribute action_funtion
+    attribute current_input = None  # needed for backpropagation
+    attribute current_output = None
+    method __init__(input_dim, activation_funtion)
+    method compute_data(input_data)
+    method backpropagation(diff)  # within a batch, update self.delta_w, self.delta_b
+    method update_parameters()  # at the end of a batch, update self.delta_w, self.delta_b with self.delta_w, self.delta_b
+    method reset_parameters()  # details differ for different layers
 
 """
 # Activation functions
