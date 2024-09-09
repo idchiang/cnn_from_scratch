@@ -1,9 +1,7 @@
-# !pytest tests/test_loss_function.py
-
 import pytest
 import numpy as np
 from sklearn.metrics import log_loss as sklearn_log_loss
-from ..cnn_from_scratch.loss_function import log_loss
+from ..loss_function import log_loss
 
 # Test cases
 test_cases_log_loss = [

@@ -2,7 +2,7 @@
 # Neuron object
 """
 import numpy as np
-from activation_function import set_activation, set_derivative
+from .activation_function import set_activation, set_derivative
 
 
 class Neuron():

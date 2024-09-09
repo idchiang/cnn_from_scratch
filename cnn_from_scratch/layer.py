@@ -2,7 +2,7 @@
 # Neuron object. (DenseLayer-focused)
 """
 import numpy as np
-from neuron import DenseNeuron
+from .neuron import DenseNeuron
 
 # Layer superclass. Pass for now.
 
