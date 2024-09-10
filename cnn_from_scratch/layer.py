@@ -33,6 +33,7 @@ class DenseLayer(Layer):
         self.output_dim = output_dim
         self.learning_rate = learning_rate
         self.activation_funtion_str = activation_function_str
+        self.neurons = []
         # Initialize Neurons
         if type(activation_function_str) is str:
             activation_function_str_arr = [
@@ -41,7 +42,7 @@ class DenseLayer(Layer):
             activation_function_str_arr = activation_function_str
         for i, af_str in enumerate(activation_function_str_arr):
             self.neurons.append(DenseNeuron(input_dim=input_dim, learning_rate=learning_rate,
-                                name=f"{name}_N{i+1}", activation_function_str=af_str), quiet=quiet)
+                                name=f"{name}_N{i+1}", activation_function_str=af_str, quiet=quiet))
         # I/O variables
         self.current_input = np.full(input_dim, np.nan)
         self.current_output = np.full(output_dim, np.nan)

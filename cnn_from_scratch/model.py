@@ -78,23 +78,28 @@ class CNN_Model():
             model_input_data) == self.model_input_dim, f"CNN_Model.compute_output() for {self.name}: Input dimension doesn't match"
         self.current_model_input = model_input_data
         prev_output = model_input_data
+        # if not self.quiet:
+        #     print(
+        #         f"CNN_Model.compute_output() in {self.name}: prev_output={prev_output}")
         for i, layer in enumerate(self.layers):
             prev_output = layer.compute_output(prev_output)
+            # if not self.quiet:
+            #     print(
+            #         f"CNN_Model.compute_output() in {self.name}: prev_output={prev_output}")
         self.current_model_output = prev_output
         return self.current_model_output
 
-    def backpropagation(self, y_true):
-        # to do: calculate delta_x_arr from y_true and y_pred=self.current_model_output
-
-        assert False, f"CNN_Model.backpropagation() in {self.name}: Not implemented yet!"
-
-        prev_delta_x_arr
+    def backpropagation(self, a_true):
+        # to do: calculate dL_da_arr from a_true and a_pred=self.current_model_output
+        prev_dL_da_arr = self.loss_derivative(
+            a_true, self.current_model_output)
         for i, layer in enumerate(self.layers[::-1]):
-            prev_delta_x_arr = layer.backpropagation(prev_delta_x_arr)
+            prev_dL_da_arr = layer.backpropagation(prev_dL_da_arr)
 
     def naive_model(self, hidden_dims=[50, 50], hidden_activation_function_str='sigmoid',
                     output_activation_function_str='sigmoid'):
         # hidden_dims = [num1, num2, num3, ......]
+        self.layers = []
         for dim in hidden_dims:
             if not isinstance(dim, int) or dim <= 0:
                 raise ValueError(
@@ -102,12 +107,14 @@ class CNN_Model():
         if type(hidden_dims) is np.ndarray:
             hidden_dims = hidden_dims.tolist()
         dims = [self.model_input_dim] + hidden_dims + [self.model_output_dim]
+        if not self.quiet:
+            print(f"CNN_Model.naive_model() in {self.name}: dims={dims}")
         activation_function_strs = [
             hidden_activation_function_str] * (len(dims) - 2) + [output_activation_function_str]
         for i in range(len(dims) - 1):
             layer = DenseLayer(input_dim=dims[i], output_dim=dims[i+1],
                                name=f'{self.name}_L{i+1}', learning_rate=self.learning_rate, activation_function_str=activation_function_strs[i], quiet=self.quiet)
-            self.insert_layer(layer, -1)
+            self.insert_layer(layer, i)
         self.validate_model()
 
     def update_parameters(self):

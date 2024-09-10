@@ -17,8 +17,8 @@ class DenseNeuron(Neuron):
         # Set input dimension & activation function
         self.input_dim = input_dim
         self.learning_rate = learning_rate
-        self.name = 'N'
-        self.activation_funtion_str = activation_function_str
+        self.name = name
+        self.activation_function_str = activation_function_str
         self.activation_function = set_activation(activation_function_str)
         self.derivative_function = set_derivative(activation_function_str)
         # Initialize weights
@@ -74,6 +74,13 @@ class DenseNeuron(Neuron):
     def update_parameters(self):
         assert self.backpropagation_count > 0, f"No DenseNeuron.backpropagation() for {self.name} performed before DenseNeuron.update_parameters()"
         # update w & b
+        if not self.quiet:
+            print(f"DenseNeuron.update_parameters() in {self.name}:", type(
+                self.delta_w), self.delta_w)
+            print(f"DenseNeuron.update_parameters() in {self.name}:", type(
+                self.learning_rate), self.learning_rate)
+            print(f"DenseNeuron.update_parameters() in {self.name}:", type(
+                self.backpropagation_count), self.backpropagation_count)
         self.w -= self.learning_rate * self.delta_w / self.backpropagation_count
         self.b -= self.learning_rate * self.delta_b / self.backpropagation_count
         # reset backpropagation stuff
@@ -82,5 +89,5 @@ class DenseNeuron(Neuron):
         self.backpropagation_count = 0
 
     def reset_parameters(self):
-        self.__init__(self.input_dim, self.learning_rate,
-                      self.activation_function_str)
+        self.__init__(input_dim=self.input_dim, name=self.name, learning_rate=self.learning_rate,
+                      activation_function_str=self.activation_function_str, quiet=self.quiet)
