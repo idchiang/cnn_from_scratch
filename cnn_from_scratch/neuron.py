@@ -1,5 +1,5 @@
 """
-# Neuron object
+# Neuron objects (DenseNeuron-focused for now)
 """
 import numpy as np
 from .activation_function import set_activation, set_derivative
@@ -13,7 +13,7 @@ class Neuron():
 
 
 class DenseNeuron(Neuron):
-    def __init__(self, input_dim, name='N0', learning_rate=1e-2, activation_function_str='sigmoid'):
+    def __init__(self, input_dim, name='N0', learning_rate=1e-2, activation_function_str='sigmoid', quiet=True):
         # Set input dimension & activation function
         self.input_dim = input_dim
         self.learning_rate = learning_rate
@@ -33,6 +33,7 @@ class DenseNeuron(Neuron):
         self.current_result = np.nan
         self.current_output = np.nan  # output = activation_function(result)
         self.derivative = np.nan
+        self.quiet = quiet
 
     def compute_output(self, input_data):
         assert len(

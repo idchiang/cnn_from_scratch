@@ -1,5 +1,5 @@
 """
-# Neuron object. (DenseLayer-focused)
+# Layer objects (DenseLayer focused for now)
 """
 import numpy as np
 from .neuron import DenseNeuron
@@ -15,7 +15,7 @@ class Layer():
 
 
 class DenseLayer(Layer):
-    def __init__(self, input_dim, output_dim, name='L0', learning_rate=1e-2, activation_function_str='sigmoid'):
+    def __init__(self, input_dim, output_dim, name='L0', learning_rate=1e-2, activation_function_str='sigmoid', quiet=True):
         self.name = name
         # Sanity checks
         if not isinstance(input_dim, int) or input_dim <= 0:
@@ -41,34 +41,36 @@ class DenseLayer(Layer):
             activation_function_str_arr = activation_function_str
         for i, af_str in enumerate(activation_function_str_arr):
             self.neurons.append(DenseNeuron(input_dim=input_dim, learning_rate=learning_rate,
-                                name=f"{name}_N{i+1}", activation_function_str=af_str))
+                                name=f"{name}_N{i+1}", activation_function_str=af_str), quiet=quiet)
         # I/O variables
         self.current_input = np.full(input_dim, np.nan)
         self.current_output = np.full(output_dim, np.nan)
+        self.quiet = quiet
 
     def compute_output(self, input_data):
         assert len(
             input_data) == self.input_dim, f"DenseLayer.compute_output() for {self.name}: Input dimension doesn't match"
         self.current_input = input_data
-        for i in range(self.output_dim):
-            self.current_output[i] = self.neurons[i].compute_output(input_data)
+        for i, neuron in enumerate(self.neurons):
+            self.current_output[i] = neuron.compute_output(input_data)
         return self.current_output
 
     def backpropagation(self, dL_da_arr):
         delta_x_arr = np.zeros(self.input_dim)
-        for i in range(self.output_dim):
-            delta_x_arr += self.neurons[i].backpropagation(dL_da_arr[i])
+        for i, neuron in enumerate(self.neurons):
+            delta_x_arr += neuron.backpropagation(dL_da_arr[i])
         return delta_x_arr
 
     def update_parameters(self):
-        for i in range(self.output_dim):
-            self.neurons[i].update_parameters()
+        for i, neuron in enumerate(self.neurons):
+            neuron.update_parameters()
 
     def reset_parameters(self):
-        for i in range(self.output_dim):
-            self.neurons[i].reset_parameters()
+        for i, neuron in enumerate(self.neurons):
+            neuron.reset_parameters()
 
 
+"""
 class InputLayer(Layer):
     def __init__(self):
         assert False, "InputLayer() not implemented yet!!!!"
@@ -77,3 +79,4 @@ class InputLayer(Layer):
 class OutputLayer(Layer):
     def __init__(self):
         assert False, "OutputLayer() not implemented yet!!!!"
+"""
