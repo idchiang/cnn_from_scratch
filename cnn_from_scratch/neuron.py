@@ -116,6 +116,9 @@ class DenseNeuron(Neuron):
         self.delta_b = 0
         self.backpropagation_count = 0
 
+    def set_learning_rate(self, learning_rate):
+        self.learning_rate = learning_rate
+
     def reset_parameters(self):
         self.__init__(input_dim=self.input_dim, name=self.name, learning_rate=self.learning_rate,
                       act_func=self.act_func, quiet=self.quiet)

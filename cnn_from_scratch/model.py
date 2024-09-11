@@ -16,7 +16,7 @@ class CNN_Model():
         self.name = name
         if loss_func is None:
             loss_func = LogLoss()
-        assert loss_func.__class__.__base__ is LossFunction, f"CNN_Model.__init__() in {name}: loss_func must be a subclass of LossFunction()"
+        # assert loss_func.__class__.__base__ is LossFunction, f"CNN_Model.__init__() in {name}: loss_func must be a subclass of LossFunction()"
         # Sanity checks
         if not isinstance(model_input_dim, int) or model_input_dim <= 0:
             raise ValueError(
@@ -123,6 +123,11 @@ class CNN_Model():
                                name=f'{self.name}_L{i+1}', learning_rate=self.learning_rate, act_func=act_func_arr[i], quiet=self.quiet)
             self.insert_layer(layer, i)
         self.validate_model()
+
+    def set_learning_rate(self, learning_rate):
+        self.learning_rate = learning_rate
+        for i, layer in enumerate(self.layers):
+            layer.set_learning_rate(learning_rate)
 
     def update_parameters(self):
         for i, layer in enumerate(self.layers):

@@ -84,6 +84,11 @@ class DenseLayer(Layer):
             delta_x_arr += neuron.backpropagation(dL_da_arr[i])
         return delta_x_arr
 
+    def set_learning_rate(self, learning_rate):
+        self.learning_rate = learning_rate
+        for i, neuron in enumerate(self.neurons):
+            neuron.set_learning_rate(learning_rate)
+
     def update_parameters(self):
         for i, neuron in enumerate(self.neurons):
             neuron.update_parameters()

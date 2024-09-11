@@ -23,16 +23,35 @@ def load_mnist(overwrite=False, filename='/Users/idchiang/working/cnn_from_scrat
     return x_train, y_train, x_test, y_test
 
 
-def show_mnist_digit(x, y=None, ax=None):
+def show_mnist_digit(x, y=None, ax=None, overwrite_title=None):
     if ax is None:
         fig, ax = plt.subplots()
-    try:
-        label = str(np.argmax(y))
-    except:
-        label = ''
+    if overwrite_title is None:
+        try:
+            label = str(np.argmax(y))
+        except:
+            label = ''
+    else:
+        label = overwrite_title
     image = x.reshape(28, 28)
     ax.imshow(image, cmap='Greys')
     ax.set_title(label)
     ax.set_xticks([])
     ax.set_yticks([])
     ax.tick_params(labelleft=False, labelbottom=False)
+
+
+def mnist_model_examination(trainer, x_data, y_data):
+    plt.close('all')
+    plt.ion()
+    fig, axs = plt.subplots(5, 5)
+    idxs = np.random.randint(len(x_data), size=25)
+    for q in range(25):
+        i, j = q // 5, q % 5
+        a_pred = trainer.predict(x_data[idxs[q]])
+        y_pred = np.argmax(a_pred)
+        y_true = np.argmax(y_data[idxs[q]])
+        title = f"true: {y_true}; pred: {y_pred}"
+        show_mnist_digit(x_data[idxs[q]], y_data[idxs[q]],
+                         axs[i, j], overwrite_title=title)
+    fig.tight_layout()
