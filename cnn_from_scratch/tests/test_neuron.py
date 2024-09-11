@@ -1,20 +1,21 @@
 import pytest
 import numpy as np
-from ..activation_function import sigmoid_activation
+from ..activation_function import *
 from ..neuron import DenseNeuron
 
 # Only flow check now.
 
 
 def test_neuron():
-    n1 = DenseNeuron(input_dim=10, activation_function_str='sigmoid')
+    n1 = DenseNeuron(input_dim=10, act_func=SigmoidActFunc())
     print('# Check if DenseNeuron.__init__() set things as expected...')
     for key in n1.__dict__:
         print('     ', key, '=', n1.__dict__[key])
 
     print('# Check if compute_output() works')
     x = np.ones(10)
-    exp = sigmoid_activation(np.dot(n1.w, x) + n1.b)
+    act_func = SigmoidActFunc()
+    exp = act_func.compute(np.dot(n1.w, x) + n1.b)
     print('         ', n1.compute_output(x))
     print('     Exp:', exp)
 
@@ -44,7 +45,3 @@ def test_neuron():
     print('         self.delta_b = ', n1.delta_b)
     assert n1.backpropagation_count == 0
     n1.reset_parameters()
-
-
-if __name__ == '__main__':
-    test_neuron()

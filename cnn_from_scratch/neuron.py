@@ -2,31 +2,22 @@
 # Neuron objects (DenseNeuron-focused for now)
 """
 import numpy as np
-from .activation_function import set_activation, set_derivative
+from abc import ABC, abstractmethod
+from .activation_function import *
+
+# Neuron superclass.
 
 
-class Neuron():
-    pass
-
-# Neuron for Dense Layer.
-# Not sure if we need other types of neurons. Just keep the name clear.
-
-
-class DenseNeuron(Neuron):
-    def __init__(self, input_dim, name='N0', learning_rate=1e-2, activation_function_str='sigmoid', quiet=True):
+class Neuron(ABC):
+    def __init__(self, input_dim, name='N0', learning_rate=1e-2, act_func=None, quiet=True):
+        if act_func is None:
+            act_func = SigmoidActFunc()
+        assert act_func.__class__.__base__ is ActivationFunction, f"Neuron.__init__() in {name}: act_func must be a subclass of ActivationFunction()"
         # Set input dimension & activation function
         self.input_dim = input_dim
         self.learning_rate = learning_rate
         self.name = name
-        self.activation_function_str = activation_function_str
-        self.activation_function = set_activation(activation_function_str)
-        self.derivative_function = set_derivative(activation_function_str)
-        # Initialize weights
-        self.w = np.random.randn(input_dim) / np.sqrt(input_dim)
-        self.b = np.random.randn()
-        # Initialize deltas
-        self.delta_w = np.zeros(input_dim)
-        self.delta_b = 0
+        self.act_func = act_func
         self.backpropagation_count = 0
         # Initialize I/O variables
         self.current_input = np.full(input_dim, np.nan)
@@ -34,15 +25,52 @@ class DenseNeuron(Neuron):
         self.current_output = np.nan  # output = activation_function(result)
         self.derivative = np.nan
         self.quiet = quiet
+        # Initialize weights
+        self.w = np.random.randn(input_dim) / np.sqrt(input_dim)
+        self.b = np.random.randn()
+        # Initialize deltas
+        self.delta_w = np.zeros(input_dim)
+        self.delta_b = 0
+
+    @abstractmethod
+    def compute_output(self, input_data):
+        pass
+
+    @abstractmethod
+    def backpropagation(self, dL_da):
+        pass
+
+    @abstractmethod
+    def update_parameters(self):
+        pass
+
+    @abstractmethod
+    def reset_parameters(self):
+        pass
+
+# Neuron for Dense Layer.
+# Not sure if we need other types of neurons. Just keep the name clear.
+
+
+class DenseNeuron(Neuron):
+    def __init__(self, input_dim, name='N0', learning_rate=1e-2, act_func=None, quiet=True):
+        super().__init__(input_dim=input_dim, name=name,
+                         learning_rate=learning_rate, act_func=act_func, quiet=quiet)
+        # Initialize weights
+        self.w = np.random.randn(input_dim) / np.sqrt(input_dim)
+        self.b = np.random.randn()
+        # Initialize deltas
+        self.delta_w = np.zeros(input_dim)
+        self.delta_b = 0
 
     def compute_output(self, input_data):
         assert len(
             input_data) == self.input_dim, f"DenseNeuron.compute_output() for {self.name}: Input dimension doesn't match"
         self.current_input = input_data
         self.current_result = np.dot(self.w, input_data) + self.b
-        self.current_output = self.activation_function(self.current_result)
+        self.current_output = self.act_func.compute(self.current_result)
         # derivative is fixed per forward calculation
-        self.derivative = self.derivative_function(
+        self.derivative = self.act_func.derivative(
             self.current_result, self.current_output)
         return self.current_output
 
@@ -90,4 +118,4 @@ class DenseNeuron(Neuron):
 
     def reset_parameters(self):
         self.__init__(input_dim=self.input_dim, name=self.name, learning_rate=self.learning_rate,
-                      activation_function_str=self.activation_function_str, quiet=self.quiet)
+                      act_func=self.act_func, quiet=self.quiet)

@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from sklearn.metrics import log_loss as sklearn_log_loss
-from ..loss_function import log_loss
+from ..loss_function import LogLoss
 
 # Test cases
 test_cases_log_loss = [
@@ -26,15 +26,13 @@ for i, test_case in enumerate(test_cases_log_loss):
 #    np.finfo(np.float32).eps = 1.1920929e-07
 #    np.finfo(np.float64).eps = 2.220446049250313e-16
 
+log_loss = LogLoss()
+
 
 def test_log_loss():
     for i, (y_true, y_pred, expected) in enumerate(test_cases_log_loss):
-        result = log_loss(y_true, y_pred)
+        result = log_loss.compute(y_true, y_pred)
         assert np.isclose(
             result, expected, atol=1e-7), f"Test case {i+1} failed: {result} != {expected}"
         if __name__ == '__main__':
             print(f"Test case {i+1} passed.")
-
-
-if __name__ == '__main__':
-    test_log_loss()

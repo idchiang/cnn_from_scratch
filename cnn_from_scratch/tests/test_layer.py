@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 from ..layer import DenseLayer
+from ..activation_function import *
 
 # Only flow check now.
 
@@ -20,7 +21,6 @@ def test_layer():
     my_layer.update_parameters()
     assert my_layer.neurons[0].backpropagation_count == 0
     my_layer.reset_parameters()
-
-
-if __name__ == '__main__':
-    test_layer()
+    my_layer2 = DenseLayer(input_dim=input_dim, output_dim=output_dim, act_func=[
+                           ReLUActFunc()]*output_dim)
+    my_layer2.reset_parameters()

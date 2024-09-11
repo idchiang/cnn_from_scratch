@@ -2,7 +2,13 @@
 import pytest
 import numpy as np
 from scipy.special import expit as sigmoid_activation2
-from ..activation_function import activation_functions_dict, set_activation
+from ..activation_function import *
+
+ActFunc_dict = {
+    'linear': LinearActFunc(),
+    'sigmoid': SigmoidActFunc(),
+    'relu': ReLUActFunc()
+}
 
 
 def linear_activation2(input_value):
@@ -19,7 +25,7 @@ def expected_activation(input_str, input_value):
         'sigmoid': sigmoid_activation2,
         'relu': relu_activation2
     }
-    if input_str.lower() in activation_functions_dict:
+    if input_str.lower() in ActFunc_dict:
         res = expected_activation_functions_dict[input_str.lower()](
             input_value)
         return res
@@ -47,8 +53,8 @@ for i, test_case in enumerate(test_cases_activation):
 
 def test_activation():
     for i, (input_str, input_value, expected) in enumerate(test_cases_activation):
-        func = set_activation(input_str)
-        result = func(input_value)
+        func = ActFunc_dict[input_str.lower()]
+        result = func.compute(input_value)
         try:
             assert np.isclose(
                 result, expected, atol=1e-5), f"Test case {i+1} failed: {result} != {expected}"
@@ -60,7 +66,3 @@ def test_activation():
                     f"Test case {i+1} failed: {result} != {expected}")
         if __name__ == '__main__':
             print(f"Test case {i+1} passed.")
-
-
-if __name__ == '__main__':
-    test_activation()

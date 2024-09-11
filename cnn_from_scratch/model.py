@@ -4,15 +4,19 @@
 import numpy as np
 import warnings
 from .layer import DenseLayer
-from .loss_function import set_loss, set_loss_derivative
+from .loss_function import *
+from .activation_function import *
 
 # Main type of CNNModel for our simple CNN.
 # Note: use consistent names with DenseNeuron() & DenseLayer().
 
 
 class CNN_Model():
-    def __init__(self, model_input_dim, model_output_dim, name='M0', learning_rate=1e-2, loss_function_str='log_loss', quiet=True):
+    def __init__(self, model_input_dim, model_output_dim, name='M0', learning_rate=1e-2, loss_func=None, quiet=True):
         self.name = name
+        if loss_func is None:
+            loss_func = LogLoss()
+        assert loss_func.__class__.__base__ is LossFunction, f"CNN_Model.__init__() in {name}: loss_func must be a subclass of LossFunction()"
         # Sanity checks
         if not isinstance(model_input_dim, int) or model_input_dim <= 0:
             raise ValueError(
@@ -33,8 +37,7 @@ class CNN_Model():
         self.current_model_input = np.full(model_input_dim, np.nan)
         self.current_model_output = np.full(model_output_dim, np.nan)
         # Loss function
-        self.loss_function = set_loss(loss_function_str)
-        self.loss_derivative = set_loss_derivative(loss_function_str)
+        self.loss_func = loss_func
         self.quiet = quiet
 
     def insert_layer(self, layer, idx=-1):
@@ -91,13 +94,17 @@ class CNN_Model():
 
     def backpropagation(self, a_true):
         # to do: calculate dL_da_arr from a_true and a_pred=self.current_model_output
-        prev_dL_da_arr = self.loss_derivative(
+        prev_dL_da_arr = self.loss_func.derivative(
             a_true, self.current_model_output)
         for i, layer in enumerate(self.layers[::-1]):
             prev_dL_da_arr = layer.backpropagation(prev_dL_da_arr)
 
-    def naive_model(self, hidden_dims=[50, 50], hidden_activation_function_str='sigmoid',
-                    output_activation_function_str='sigmoid'):
+    def naive_model(self, hidden_dims=[50, 50], hidden_act_func=None,
+                    output_act_func=None):
+        if hidden_act_func is None:
+            hidden_act_func = SigmoidActFunc()
+        if output_act_func is None:
+            output_act_func = SigmoidActFunc()
         # hidden_dims = [num1, num2, num3, ......]
         self.layers = []
         for dim in hidden_dims:
@@ -109,11 +116,11 @@ class CNN_Model():
         dims = [self.model_input_dim] + hidden_dims + [self.model_output_dim]
         if not self.quiet:
             print(f"CNN_Model.naive_model() in {self.name}: dims={dims}")
-        activation_function_strs = [
-            hidden_activation_function_str] * (len(dims) - 2) + [output_activation_function_str]
+        act_func_arr = [
+            hidden_act_func] * (len(dims) - 2) + [output_act_func]
         for i in range(len(dims) - 1):
             layer = DenseLayer(input_dim=dims[i], output_dim=dims[i+1],
-                               name=f'{self.name}_L{i+1}', learning_rate=self.learning_rate, activation_function_str=activation_function_strs[i], quiet=self.quiet)
+                               name=f'{self.name}_L{i+1}', learning_rate=self.learning_rate, act_func=act_func_arr[i], quiet=self.quiet)
             self.insert_layer(layer, i)
         self.validate_model()
 
