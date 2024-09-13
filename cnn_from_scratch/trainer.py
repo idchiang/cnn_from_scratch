@@ -113,7 +113,7 @@ class CNN_trainer():
         else:
             self.cross_validated = True
 
-    def train_model(self, N=1000000, batch=100, N_print=1000, learning_rate=1e-2, reset_history=False):
+    def train_model(self, N=1000000, batch=100, N_print=1000, learning_rate=1e-2, reset_history=False, do_acc=False):
         # Sanity check
         if not self.cross_validated:
             self.cross_validate()
@@ -131,7 +131,7 @@ class CNN_trainer():
         N_train = len(self.x_train)
         perm_arr = np.random.permutation(N_train)
         # Initial Loss
-        self.calc_print_status(0, N)
+        self.calc_print_status(0, N, do_acc=do_acc)
         # Train
         for i in range(N):
             # Pick the permutated training data index. Shuffle?
@@ -146,62 +146,103 @@ class CNN_trainer():
                 self.model.update_parameters()
             # Print + Save current status?
             if (i + 1) % N_print == 0:
-                self.calc_print_status(i + 1, N)
+                self.calc_print_status(i + 1, N, do_acc=do_acc)
         # Visualize
-        self.plot_history()
+        self.plot_history(do_acc=do_acc)
 
-    def calc_print_status(self, i_history, N):
+    def calc_print_status(self, i_history, N, do_acc=False):
         self.history_counts.append(i_history)
-        train_loss = self.calculate_train_loss()
-        test_loss = self.calculate_test_loss()
+        train_loss, train_acc = self.calculate_train_loss()
+        test_loss, test_acc = self.calculate_test_loss()
         current_time = datetime.now()
         time_stamp = current_time.strftime("%H:%M:%S")
         #
-        print(
-            f"# CNN_trainer {self.name}: {i_history}/{N} Step - Train loss = {train_loss:.3f}; Test loss = {test_loss:.3f} - {time_stamp}")
+        if do_acc:
+            print(
+                f"# CNN_trainer {self.name}: {i_history}/{N} Step - Train loss = {train_loss:.3f}; Test loss = {test_loss:.3f} - {time_stamp}",
+                f"                                                  Train acc = {train_acc:.1f}%; Test acc = {test_acc:.1f}%")
+        else:
+            print(
+                f"# CNN_trainer {self.name}: {i_history}/{N} Step - Train loss = {train_loss:.3f}; Test loss = {test_loss:.3f} - {time_stamp}")
 
-    def calculate_train_loss(self):
-        total_loss = 0
+    def calculate_train_loss(self, do_acc=False):
+        total_loss = 0.
+        total_correct = 0
         for i, x_train_i in enumerate(self.x_train):
             a_pred = self.model.compute_output(x_train_i)
             loss = self.loss_func.compute(self.y_train[i], a_pred)
             total_loss += loss
+            if do_acc:
+                total_correct += int(
+                    np.agrmax(self.y_train[i]) == np.argmax(a_pred))
         avg_loss = total_loss / len(self.x_train)
         self.history_train_loss.append(avg_loss)
-        return avg_loss
+        if do_acc:
+            acc = 100 * float(total_correct) / len(self.x_train)
+            self.history_train_acc.append(acc)
+            return avg_loss, acc
+        else:
+            return avg_loss
 
-    def calculate_test_loss(self):
-        total_loss = 0
+    def calculate_test_loss(self, do_acc=False):
+        total_loss = 0.
+        total_correct = 0
         for i, x_test_i in enumerate(self.x_test):
             a_pred = self.model.compute_output(x_test_i)
             loss = self.loss_func.compute(self.y_test[i], a_pred)
             total_loss += loss
+            if do_acc:
+                total_correct += int(
+                    np.agrmax(self.y_test[i]) == np.argmax(a_pred))
         avg_loss = total_loss / len(self.x_test)
         self.history_test_loss.append(avg_loss)
-        return avg_loss
+        if do_acc:
+            acc = 100 * float(total_correct) / len(self.x_test)
+            self.history_test_acc.append(acc)
+            return avg_loss, acc
+        else:
+            return avg_loss
 
-    def plot_history(self):
+    def plot_history(self, do_acc=False):
         if len(self.history_train_loss) == 0:
             warnings.warn(
                 f"CNN_trainer.plot_history() in {self.name}: There is no history to plot!!", UserWarning)
             return
         plt.close('all')
         plt.ion()
-        fig, ax = plt.subplots()
+        if do_acc:
+            fig, axs = plt.subplots(nrows=2)
+            ax = axs[0]
+        else:
+            fig, axs = plt.subplots()
+            ax = axs
+        # Loss history
         ax.plot(self.history_counts, self.history_train_loss,
                 'b', label='Train loss')
         ax.plot(self.history_counts, self.history_test_loss,
-                'b', label='Test loss')
+                'o', label='Test loss')
         ax.set_ylabel('Loss')
         ax.set_xlabel('N')
         ax.set_title(self.model.name)
         ax.legend()
+        # Accuracy history
+        if do_acc:
+            ax = axs[1]
+            ax.plot(self.history_counts, np.array(self.history_train_acc),
+                    'b', label='Train accuracy')
+            ax.plot(self.history_counts, np.array(self.history_test_acc),
+                    'o', label='Test accuracy')
+            ax.set_ylabel('Accuracy [%]')
+            ax.set_xlabel('N')
+            ax.legend()
         fig.show()
 
     def reset_history(self):
         self.history_train_loss = []
         self.history_test_loss = []
         self.history_counts = []
+        self.history_train_acc = []
+        self.history_test_acc = []
 
     def predict(self, x_input):
         if len(x_input.shape) == 1:
