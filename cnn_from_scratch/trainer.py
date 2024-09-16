@@ -124,6 +124,8 @@ class CNN_trainer():
             batch_size = len(self.x_train)
             warnings.warn(
                 f"CNN_trainer.train_model() in {self.name}: batch_size larger than data length. Setting it to {len(self.x_train)}")
+        if batch_size > 1:
+            warnings.warn("CNN_trainer.train_model() in {self.name}: unsolved issue with batch_size > 1. Suggesting batch_size = 1 for now.")
         # Learning rate...
         self.model.set_learning_rate(learning_rate)
         # Reset?
@@ -159,12 +161,12 @@ class CNN_trainer():
         #
         if do_acc:
             print(
-                f"# CNN_trainer {self.name}, Epoch: {i_history}/{n_epoch} - {time_stamp}",
+                f"# CNN_trainer {self.name}, Epoch: {i_history}/{n_epoch} - {time_stamp}\n",
                 f"         - Train loss = {train_loss:.3f}; Test loss = {test_loss:.3f}\n",
                 f"         - Train acc = {train_acc:.1f}%; Test acc = {test_acc:.1f}%")
         else:
             print(
-                f"# CNN_trainer {self.name}, Epoch: {i_history}/{n_epoch} - {time_stamp}",
+                f"# CNN_trainer {self.name}, Epoch: {i_history}/{n_epoch} - {time_stamp}\n",
                 f"         - Train loss = {train_loss:.3f}; Test loss = {test_loss:.3f}")
 
     def calculate_train_loss(self, do_acc=False):
