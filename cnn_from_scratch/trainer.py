@@ -113,57 +113,59 @@ class CNN_trainer():
         else:
             self.cross_validated = True
 
-    def train_model(self, N=1000000, batch=100, N_print=1000, learning_rate=1e-2, reset_history=False, do_acc=False):
+    def train_model(self, n_epoch=20, batch_size=200, learning_rate=1e-2, reset_history=False, do_acc=False):
         # Sanity check
         if not self.cross_validated:
             self.cross_validate()
         if not self.cross_validated:
             raise ValueError(
                 f"CNN_trainer.train_model() in {self.name}: cross validation failed")
-        if (batch > N) or (N_print > N):
-            raise ValueError(
-                f"CNN_trainer.train_model() in {self.name}: batch and N_print should < N")
+        if batch_size > len(self.x_train):
+            batch_size = len(self.x_train)
+            warnings.warn(
+                f"CNN_trainer.train_model() in {self.name}: batch_size larger than data length. Setting it to {len(self.x_train)}")
         # Learning rate...
         self.model.set_learning_rate(learning_rate)
         # Reset?
         if reset_history:
             self.reset_history()
+            # Initial Loss
+            self.calc_print_status(0, n_epoch, do_acc=do_acc)
         N_train = len(self.x_train)
         perm_arr = np.random.permutation(N_train)
-        # Initial Loss
-        self.calc_print_status(0, N, do_acc=do_acc)
         # Train
-        for i in range(N):
-            # Pick the permutated training data index. Shuffle?
-            if i % N_train == 0:
-                perm_arr = np.random.permutation(N_train)
-            i_train = perm_arr[i % N_train]
-            # Fowward computation & Backpropagation -> this part could be made parallel?
-            self.model.compute_output(self.x_train[i_train])
-            self.model.backpropagation(self.y_train[i_train])
-            # Batch update?
-            if (i + 1) % batch == 0:
+        for j in range(n_epoch):
+            # Shuffle?
+            perm_arr = np.random.permutation(N_train)
+            for i, i_train in enumerate(perm_arr):
+                # Fowward computation & Backpropagation -> this part could be made parallel?
+                self.model.compute_output(self.x_train[i_train])
+                self.model.backpropagation(self.y_train[i_train])
+                # Batch update?
+                if (i + 1) % batch_size == 0:
+                    self.model.update_parameters()
+            if N_train % batch_size > 0:
                 self.model.update_parameters()
-            # Print + Save current status?
-            if (i + 1) % N_print == 0:
-                self.calc_print_status(i + 1, N, do_acc=do_acc)
+            # Calc + print history
+            self.calc_print_status(j + 1, n_epoch, do_acc=do_acc)
         # Visualize
         self.plot_history(do_acc=do_acc)
 
-    def calc_print_status(self, i_history, N, do_acc=False):
-        self.history_counts.append(i_history)
-        train_loss, train_acc = self.calculate_train_loss()
-        test_loss, test_acc = self.calculate_test_loss()
+    def calc_print_status(self, i_history, n_epoch, do_acc=False):
+        train_loss, train_acc = self.calculate_train_loss(do_acc=do_acc)
+        test_loss, test_acc = self.calculate_test_loss(do_acc=do_acc)
         current_time = datetime.now()
         time_stamp = current_time.strftime("%H:%M:%S")
         #
         if do_acc:
             print(
-                f"# CNN_trainer {self.name}: {i_history}/{N} Step - Train loss = {train_loss:.3f}; Test loss = {test_loss:.3f} - {time_stamp}",
-                f"                                                  Train acc = {train_acc:.1f}%; Test acc = {test_acc:.1f}%")
+                f"# CNN_trainer {self.name}, Epoch: {i_history}/{n_epoch} - {time_stamp}",
+                f"         - Train loss = {train_loss:.3f}; Test loss = {test_loss:.3f}\n",
+                f"         - Train acc = {train_acc:.1f}%; Test acc = {test_acc:.1f}%")
         else:
             print(
-                f"# CNN_trainer {self.name}: {i_history}/{N} Step - Train loss = {train_loss:.3f}; Test loss = {test_loss:.3f} - {time_stamp}")
+                f"# CNN_trainer {self.name}, Epoch: {i_history}/{n_epoch} - {time_stamp}",
+                f"         - Train loss = {train_loss:.3f}; Test loss = {test_loss:.3f}")
 
     def calculate_train_loss(self, do_acc=False):
         total_loss = 0.
@@ -174,15 +176,14 @@ class CNN_trainer():
             total_loss += loss
             if do_acc:
                 total_correct += int(
-                    np.agrmax(self.y_train[i]) == np.argmax(a_pred))
+                    np.argmax(self.y_train[i]) == np.argmax(a_pred))
         avg_loss = total_loss / len(self.x_train)
         self.history_train_loss.append(avg_loss)
+        acc = np.nan
         if do_acc:
             acc = 100 * float(total_correct) / len(self.x_train)
             self.history_train_acc.append(acc)
-            return avg_loss, acc
-        else:
-            return avg_loss
+        return avg_loss, acc
 
     def calculate_test_loss(self, do_acc=False):
         total_loss = 0.
@@ -193,15 +194,14 @@ class CNN_trainer():
             total_loss += loss
             if do_acc:
                 total_correct += int(
-                    np.agrmax(self.y_test[i]) == np.argmax(a_pred))
+                    np.argmax(self.y_test[i]) == np.argmax(a_pred))
         avg_loss = total_loss / len(self.x_test)
         self.history_test_loss.append(avg_loss)
+        acc = np.nan
         if do_acc:
             acc = 100 * float(total_correct) / len(self.x_test)
             self.history_test_acc.append(acc)
-            return avg_loss, acc
-        else:
-            return avg_loss
+        return avg_loss, acc
 
     def plot_history(self, do_acc=False):
         if len(self.history_train_loss) == 0:
@@ -217,10 +217,10 @@ class CNN_trainer():
             fig, axs = plt.subplots()
             ax = axs
         # Loss history
-        ax.plot(self.history_counts, self.history_train_loss,
-                'b', label='Train loss')
-        ax.plot(self.history_counts, self.history_test_loss,
-                'o', label='Test loss')
+        ax.plot(np.arange(len(self.history_train_loss)), self.history_train_loss,
+                color='tab:blue', label='Train loss')
+        ax.plot(np.arange(len(self.history_train_loss)), self.history_test_loss,
+                color='tab:orange', label='Test loss')
         ax.set_ylabel('Loss')
         ax.set_xlabel('N')
         ax.set_title(self.model.name)
@@ -228,10 +228,10 @@ class CNN_trainer():
         # Accuracy history
         if do_acc:
             ax = axs[1]
-            ax.plot(self.history_counts, np.array(self.history_train_acc),
-                    'b', label='Train accuracy')
-            ax.plot(self.history_counts, np.array(self.history_test_acc),
-                    'o', label='Test accuracy')
+            ax.plot(np.arange(len(self.history_train_loss)), np.array(self.history_train_acc),
+                    color='tab:blue', label='Train accuracy')
+            ax.plot(np.arange(len(self.history_train_loss)), np.array(self.history_test_acc),
+                    color='tab:orange', label='Test accuracy')
             ax.set_ylabel('Accuracy [%]')
             ax.set_xlabel('N')
             ax.legend()
@@ -240,7 +240,6 @@ class CNN_trainer():
     def reset_history(self):
         self.history_train_loss = []
         self.history_test_loss = []
-        self.history_counts = []
         self.history_train_acc = []
         self.history_test_acc = []
 

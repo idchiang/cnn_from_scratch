@@ -32,7 +32,7 @@ class LinearActFunc(ActivationFunction):
         return input_value
 
     def derivative(self, result, output):
-        return 1
+        return 1.
 
 
 """
@@ -43,12 +43,12 @@ Sigmoid
 class SigmoidActFunc(ActivationFunction):
     def compute(self, input_value):
         if input_value >= 0:
-            return 1 / (1 + np.exp(-input_value))
+            return 1. / (1 + np.exp(-input_value))
         else:
             return np.exp(input_value) / (1 + np.exp(input_value))
 
     def derivative(self, result, output):
-        return output * (1 - output)
+        return output * (1. - output)
 
 
 """
@@ -58,13 +58,13 @@ Rectified Linear Unit
 
 class ReLUActFunc(ActivationFunction):
     def compute(self, input_value):
-        if input_value <= 0:
-            return 0
+        if (input_value > 0) or (np.isnan(input_value)):
+            return float(input_value)
         else:
-            return input_value
+            return 0.
 
     def derivative(self, result, output):
-        if result <= 0:
-            return 0
+        if result > 0:
+            return 1.
         else:
-            return 1
+            return 0.

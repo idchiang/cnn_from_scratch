@@ -44,7 +44,7 @@ def show_mnist_digit(x, y=None, ax=None, overwrite_title=None):
 def mnist_model_examination(trainer, x_data, y_data):
     plt.close('all')
     plt.ion()
-    fig, axs = plt.subplots(5, 5)
+    fig, axs = plt.subplots(5, 5, figsize=(8, 8))
     idxs = np.random.randint(len(x_data), size=25)
     for q in range(25):
         i, j = q // 5, q % 5

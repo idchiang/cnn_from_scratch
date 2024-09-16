@@ -3,6 +3,7 @@
 """
 import numpy as np
 from abc import ABC, abstractmethod
+import warnings
 from .activation_function import *
 
 # Neuron superclass.
@@ -58,10 +59,10 @@ class DenseNeuron(Neuron):
                          learning_rate=learning_rate, act_func=act_func, quiet=quiet)
         # Initialize weights
         self.w = np.random.randn(input_dim) / np.sqrt(input_dim)
-        self.b = np.random.randn()
+        self.b = 0.
         # Initialize deltas
         self.delta_w = np.zeros(input_dim)
-        self.delta_b = 0
+        self.delta_b = 0.
 
     def compute_output(self, input_data):
         assert len(
@@ -100,7 +101,10 @@ class DenseNeuron(Neuron):
         return delta_x
 
     def update_parameters(self):
-        assert self.backpropagation_count > 0, f"No DenseNeuron.backpropagation() for {self.name} performed before DenseNeuron.update_parameters()"
+        if self.backpropagation_count == 0:
+            warnings.warn(
+                f"No DenseNeuron.backpropagation() for {self.name} performed before DenseNeuron.update_parameters()")
+            return
         # update w & b
         if not self.quiet:
             print(f"DenseNeuron.update_parameters() in {self.name}:", type(
@@ -109,8 +113,10 @@ class DenseNeuron(Neuron):
                 self.learning_rate), self.learning_rate)
             print(f"DenseNeuron.update_parameters() in {self.name}:", type(
                 self.backpropagation_count), self.backpropagation_count)
-        self.w -= self.learning_rate * self.delta_w / self.backpropagation_count
-        self.b -= self.learning_rate * self.delta_b / self.backpropagation_count
+        self.w -= self.learning_rate * self.delta_w / \
+            float(self.backpropagation_count)
+        self.b -= self.learning_rate * self.delta_b / \
+            float(self.backpropagation_count)
         # reset backpropagation stuff
         self.delta_w = np.zeros(self.input_dim)
         self.delta_b = 0

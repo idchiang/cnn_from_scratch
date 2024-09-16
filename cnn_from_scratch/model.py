@@ -102,7 +102,7 @@ class CNN_Model():
     def naive_model(self, hidden_dims=[50, 50], hidden_act_func=None,
                     output_act_func=None):
         if hidden_act_func is None:
-            hidden_act_func = SigmoidActFunc()
+            hidden_act_func = ReLUActFunc()
         if output_act_func is None:
             output_act_func = SigmoidActFunc()
         # hidden_dims = [num1, num2, num3, ......]
