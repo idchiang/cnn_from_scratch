@@ -55,6 +55,8 @@ class Layer(ABC):
 # Main type of layer for our simple CNN.
 # Note: use consistent names with DenseNeuron().
 
+# activation(w_matrix * x_arr + offset_b) = output_arr
+
 
 class DenseLayer(Layer):
     def __init__(self, input_dim, output_dim, name='L0', learning_rate=1e-2, act_func=SigmoidActFunc(), quiet=True):

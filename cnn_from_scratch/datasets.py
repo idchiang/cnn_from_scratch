@@ -1,5 +1,6 @@
 # x_train, y_train, x_test, y_test = load_mnist()
-import os, sys
+import os
+import sys
 import platform
 from tensorflow import keras
 import numpy as np
@@ -10,7 +11,7 @@ def load_mnist(overwrite=False, filename=''):
     if filename == '':
         if platform.system() == 'Windows':
             filename = 'C:/Users/jiang/workspace/cnn_from_scratch/data/mnist.npz'
-        elif platform.system() == 'macOS':
+        elif platform.system() == 'Darwin':
             filename = '/Users/idchiang/working/cnn_from_scratch/data/mnist.npz'
     if overwrite or (not os.path.isfile(filename)):
         (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
